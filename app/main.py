@@ -1,7 +1,7 @@
 import uvicorn
 from fastapi import FastAPI
 
-from app.api.api import api_router
+from api.api import api_router
 
 app = FastAPI(title="Resume.io to PDF")
 app.include_router(api_router)

@@ -2,7 +2,7 @@ from fastapi import APIRouter, Request, Response
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 
-from app.services.resumeio import ResumeioDownloader
+from services.resumeio import ResumeioDownloader
 
 api_router = APIRouter()
 templates = Jinja2Templates(directory="templates")
