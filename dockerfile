@@ -25,6 +25,4 @@ EXPOSE 8000
 # Run your app
 COPY . .
 
-RUN ls -la
-
 CMD [ "poetry", "run", "python", "app/main.py" ]
