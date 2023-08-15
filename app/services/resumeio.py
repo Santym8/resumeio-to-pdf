@@ -6,7 +6,8 @@ import requests
 from fastapi import HTTPException
 from fpdf import FPDF
 import pytesseract
-from PyPDF2 import PdfMerger
+from pypdf import PdfWriter, PdfReader, Transformation, PaperSize, PageObject
+from pypdf.generic import AnnotationBuilder
 from io import BytesIO
 import os
 
@@ -97,19 +98,47 @@ class ResumeioDownloader:
 
 
     def _generate_pdf_searchable(self) -> None:
-        manager = PdfMerger()
+        writer = PdfWriter()
         for i, image_url in enumerate(self.images_urls):
                 image = requests.get(image_url).content
                 with open('/files/file.png', 'w+b') as f:
                     f.write(image)
 
-                pdf_page = BytesIO(pytesseract.image_to_pdf_or_hocr('/files/file.png', extension='pdf'))
-                manager.append(pdf_page)
+                pdf_temp = BytesIO(
+                    pytesseract.image_to_pdf_or_hocr(
+                        '/files/file.png', 
+                        extension='pdf',
+                        config="--dpi 300"
+                    )
+                )
+
+                writer.append(pdf_temp)
+
+
+
+                # for link in self.metadata[i].get("links"):
+                #     x = link["left"]
+                #     y = h - link["top"]
+
+                #     annotation = AnnotationBuilder.link(
+                #         rect=(x, y, x + link["width"], y - link["height"]),
+                #         url=link["url"],
+                #     )
+
+                #     writer.add_annotation(page_number=i, annotation=annotation)
+
+                #     annotation = AnnotationBuilder.rectangle(
+                #         rect=(x, y, x + link["width"], y - link["height"]),
+                #         interiour_color="ff0000"
+                #     )
+
+                #     writer.add_annotation(page_number=i, annotation=annotation)
+
 
         os.remove('/files/file.png')
 
         with BytesIO() as file:
-            manager.write(file)
+            writer.write(file)
             self.buffer = file.getvalue()
         
 
