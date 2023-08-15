@@ -17,8 +17,11 @@ ENV PATH="${PATH}:${POETRY_VENV}/bin"
 WORKDIR /app
 
 # Install dependencies
-COPY poetry.lock pyproject.toml .
+COPY pyproject.toml .
 RUN poetry install
+
+RUN apt-get update
+RUN apt-get install libleptonica-dev tesseract-ocr libtesseract-dev python3-pil tesseract-ocr-eng tesseract-ocr-script-latn --yes
 
 EXPOSE 8000
 

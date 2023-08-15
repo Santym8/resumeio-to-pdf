@@ -2,10 +2,13 @@ import json
 import re
 from dataclasses import dataclass, field
 from datetime import datetime
-
 import requests
 from fastapi import HTTPException
 from fpdf import FPDF
+import pytesseract
+from PyPDF2 import PdfMerger
+from io import BytesIO
+import os
 
 
 @dataclass
@@ -54,7 +57,7 @@ class ResumeioDownloader:
         else:
             raise HTTPException(status_code=400, detail=f"Invalid resume id: {self.resume_id}")
 
-    def run(self) -> bytearray:
+    def run(self, searchable: bool = True) -> bytearray:
         """
         Main method to download and generate PDF from resume.io.
 
@@ -65,7 +68,11 @@ class ResumeioDownloader:
         """
         self._get_resume_metadata()
         self._format_images_urls()
-        self._generate_pdf()
+
+        if(searchable):
+            self._generate_pdf_searchable()
+        else:
+            self._generate_pdf()
 
         return self.buffer
 
@@ -88,6 +95,25 @@ class ResumeioDownloader:
             )
             self.images_urls.append(download_url)
 
+
+    def _generate_pdf_searchable(self) -> None:
+        manager = PdfMerger()
+        for i, image_url in enumerate(self.images_urls):
+                image = requests.get(image_url).content
+                with open('/files/file.png', 'w+b') as f:
+                    f.write(image)
+
+                pdf_page = BytesIO(pytesseract.image_to_pdf_or_hocr('/files/file.png', extension='pdf'))
+                manager.append(pdf_page)
+
+        os.remove('/files/file.png')
+
+        with BytesIO() as file:
+            manager.write(file)
+            self.buffer = file.getvalue()
+        
+
+
     def _generate_pdf(self) -> None:
         """Generate a PDF using the FPDF library from fetched images and metadata."""
         w, h = self.metadata[0].get("viewport").values()
@@ -104,5 +130,4 @@ class ResumeioDownloader:
                 y = h - link["top"]
 
                 pdf.link(x=x, y=y, w=link["width"], h=link["height"], link=link["url"])
-
         self.buffer = pdf.output(dest="S")

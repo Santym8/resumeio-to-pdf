@@ -9,7 +9,7 @@ templates = Jinja2Templates(directory="templates")
 
 
 @api_router.get("/download", response_class=HTMLResponse)
-def download_resume(resume_id: str):
+def download_resume(resume_id: str, searchable: bool = False):
     """
     Download a resume from resume.io and return it as a PDF.
 
@@ -24,7 +24,7 @@ def download_resume(resume_id: str):
         A PDF representation of the resume with appropriate headers for inline display.
     """
     resumeio = ResumeioDownloader(resume_id=resume_id, image_size=3000, extension="jpg")
-    buffer = resumeio.run()
+    buffer = resumeio.run(searchable)
     return Response(
         buffer, headers={"Content-Disposition": 'inline; filename="resume.pdf"'}, media_type="application/pdf"
     )

@@ -58,8 +58,12 @@
    <body>
       <div class="container">
           <h1 class="title">Resume.io to PDF</h1>
-         <form method="get" class="resume_form" action='/download{{ resume_id }}'>
+         <form method="get" class="resume_form" action='/download{{ resume_id }}{{ searchable }}'>
             <input type="text" class="resume_id" name="resume_id" placeholder="Enter a resume ID or URL to download" aria-label="Id" required="true">
+            <div class="col">
+               <label for="searchable">Enable text search</label>
+               <input type="checkbox" name="searchable" checked>
+            </div>
             <button class="btn" type="submit">Download</button>
          </form>
       </div>
