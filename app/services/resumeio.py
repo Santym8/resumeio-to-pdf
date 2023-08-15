@@ -6,8 +6,7 @@ import requests
 from fastapi import HTTPException
 from fpdf import FPDF
 import pytesseract
-from pypdf import PdfWriter, PdfReader, Transformation, PaperSize, PageObject
-from pypdf.generic import AnnotationBuilder
+from pypdf import PdfWriter
 from io import BytesIO
 import os
 
