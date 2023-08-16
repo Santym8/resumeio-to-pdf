@@ -105,14 +105,13 @@ class ResumeioDownloader:
                 with open('/files/file.png', 'w+b') as f:
                     f.write(image)
 
-                temp_pdf = PdfReader(BytesIO(
+                temp_pdf = PdfReader(
                     pytesseract.image_to_pdf_or_hocr(
                         '/files/file.png', 
                         extension='pdf'
                     )
-                ))
+                )
 
-                
                 # resize page to fit *inside* Target
                 page = temp_pdf.pages[0]
                 h = float(page.mediabox.height)
@@ -122,12 +121,8 @@ class ResumeioDownloader:
                 transform = Transformation().scale(scale_factor,scale_factor)
                 page.add_transformation(transform)
 
-                target_page = PageObject.create_blank_page(width = target_w, height = target_h)
-                page.mediabox = target_page.mediabox
-                target_page.merge_page(page)
-
                 # Add page to writer
-                writer.add_page(target_page)
+                writer.add_page(page)
 
                 # Add links
                 for link in self.metadata[i].get("links"):
