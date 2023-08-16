@@ -6,7 +6,8 @@ import requests
 from fastapi import HTTPException
 from fpdf import FPDF
 import pytesseract
-from pypdf import PdfWriter
+from pypdf import PdfWriter, PageObject, PdfReader, Transformation
+from pypdf.generic import AnnotationBuilder
 from io import BytesIO
 import os
 
@@ -97,42 +98,48 @@ class ResumeioDownloader:
 
 
     def _generate_pdf_searchable(self) -> None:
+        target_w, target_h = self.metadata[0].get("viewport").values()
         writer = PdfWriter()
         for i, image_url in enumerate(self.images_urls):
                 image = requests.get(image_url).content
                 with open('/files/file.png', 'w+b') as f:
                     f.write(image)
 
-                pdf_temp = BytesIO(
+                temp_pdf = PdfReader(BytesIO(
                     pytesseract.image_to_pdf_or_hocr(
                         '/files/file.png', 
-                        extension='pdf',
-                        config="--dpi 300"
+                        extension='pdf'
                     )
-                )
+                ))
 
-                writer.append(pdf_temp)
+                
+                # resize page to fit *inside* Target
+                page = temp_pdf.pages[0]
+                h = float(page.mediabox.height)
+                w = float(page.mediabox.width)
+                scale_factor = min(target_h/h, target_w/w)
 
+                transform = Transformation().scale(scale_factor,scale_factor)
+                page.add_transformation(transform)
 
+                target_page = PageObject.create_blank_page(width = target_w, height = target_h)
+                page.mediabox = target_page.mediabox
+                target_page.merge_page(page)
 
-                # for link in self.metadata[i].get("links"):
-                #     x = link["left"]
-                #     y = h - link["top"]
+                # Add page to writer
+                writer.add_page(target_page)
 
-                #     annotation = AnnotationBuilder.link(
-                #         rect=(x, y, x + link["width"], y - link["height"]),
-                #         url=link["url"],
-                #     )
+                # Add links
+                for link in self.metadata[i].get("links"):
+                    x = link["left"]
+                    y = link["top"]
 
-                #     writer.add_annotation(page_number=i, annotation=annotation)
+                    annotation = AnnotationBuilder.link(
+                        rect=(x, y, x + link["width"], y + link["height"]),
+                        url=link["url"],
+                    )
 
-                #     annotation = AnnotationBuilder.rectangle(
-                #         rect=(x, y, x + link["width"], y - link["height"]),
-                #         interiour_color="ff0000"
-                #     )
-
-                #     writer.add_annotation(page_number=i, annotation=annotation)
-
+                    writer.add_annotation(page_number=i, annotation=annotation)
 
         os.remove('/files/file.png')
 
