@@ -28,4 +28,6 @@ EXPOSE 8000
 # Run your app
 COPY . .
 
+RUN mkdir /files
+
 CMD [ "poetry", "run", "python", "app/main.py" ]

@@ -106,9 +106,11 @@ class ResumeioDownloader:
                     f.write(image)
 
                 temp_pdf = PdfReader(
-                    pytesseract.image_to_pdf_or_hocr(
-                        '/files/file.png', 
-                        extension='pdf'
+                    BytesIO(
+                        pytesseract.image_to_pdf_or_hocr(
+                            '/files/file.png', 
+                            extension='pdf'
+                        )
                     )
                 )
 
@@ -118,8 +120,10 @@ class ResumeioDownloader:
                 w = float(page.mediabox.width)
                 scale_factor = min(target_h/h, target_w/w)
 
-                transform = Transformation().scale(scale_factor,scale_factor)
-                page.add_transformation(transform)
+                page.scale_by(scale_factor)
+
+                # transform = Transformation().scale(scale_factor,scale_factor)
+                # page.add_transformation(transform)
 
                 # Add page to writer
                 writer.add_page(page)
